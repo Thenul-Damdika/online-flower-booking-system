@@ -3,7 +3,7 @@
 $host = "localhost";
 $username = "root";
 $password = "";
-$database = "online_flower_booking";
+$database = "fbs";
 
 $conn = new mysqli(
     $host,
