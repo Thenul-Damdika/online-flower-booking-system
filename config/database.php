@@ -1,20 +1,18 @@
 <?php
-
-$host = "localhost";
+// Database Configuration
+$host     = "127.0.0.1";
 $username = "root";
 $password = "";
-$database = "fbs";
+$database = "online_flower_booking";
+$port     = 3307;
 
-$conn = new mysqli(
-    $host,
-    $username,
-    $password,
-    $database
-);
+// Enable MySQLi Exception reporting for error handling
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-if ($conn->connect_error) {
-    die("Database connection failed: " . $conn->connect_error);
+try {
+    $conn = new mysqli($host, $username, $password, $database, $port);
+    $conn->set_charset("utf8mb4");
+} catch (mysqli_sql_exception $e) {
+    die("Database connection failed: " . $e->getMessage());
 }
-
-$conn->set_charset("utf8mb4");
 ?>
