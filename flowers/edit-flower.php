@@ -18,34 +18,7 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 $id = (int)$_GET['id'];
 $error = '';
 
-// Process form submission for update
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $flower_name    = trim($_POST['flower_name'] ?? '');
-    $price          = isset($_POST['price']) ? (float)$_POST['price'] : 0;
-    $stock_quantity = isset($_POST['stock_quantity']) ? (int)$_POST['stock_quantity'] : 0;
-    $supplier_id    = !empty($_POST['supplier_id']) ? (int)$_POST['supplier_id'] : null;
-    $description    = trim($_POST['description'] ?? '');
-
-    if ($flower_name === '') {
-        $error = "Flower name is required!";
-    } elseif ($price <= 0) {
-        $error = "Price must be greater than 0!";
-    } elseif ($stock_quantity < 0) {
-        $error = "Stock quantity cannot be negative!";
-    } else {
-        $stmt = mysqli_prepare($conn, "UPDATE flowers SET flower_name = ?, price = ?, stock_quantity = ?, supplier_id = ?, description = ? WHERE id = ?");
-        mysqli_stmt_bind_param($stmt, "sdiisi", $flower_name, $price, $stock_quantity, $supplier_id, $description, $id);
-
-        if (mysqli_stmt_execute($stmt)) {
-            header("Location: ../admin/flowers.php?msg=updated");
-            exit();
-        } else {
-            $error = "Error: " . mysqli_error($conn);
-        }
-    }
-}
-
-// Fetch existing flower details
+// Fetch existing flower details first (needed for getting current image name)
 $stmt = mysqli_prepare($conn, "SELECT * FROM flowers WHERE id = ?");
 mysqli_stmt_bind_param($stmt, "i", $id);
 mysqli_stmt_execute($stmt);
@@ -57,15 +30,79 @@ if (!$flower) {
     exit();
 }
 
+// Process form submission for update
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $flower_name    = trim($_POST['flower_name'] ?? '');
+    $price          = isset($_POST['price']) ? (float)$_POST['price'] : 0;
+    $stock_quantity = isset($_POST['stock_quantity']) ? (int)$_POST['stock_quantity'] : 0;
+    $supplier_id    = !empty($_POST['supplier_id']) ? (int)$_POST['supplier_id'] : null;
+    $description    = trim($_POST['description'] ?? '');
+
+    // Keep existing image as default
+    $image_name = $flower['image'] ?? '';
+
+    // Check if new image is uploaded
+    if (isset($_FILES['flower_image']) && $_FILES['flower_image']['error'] === UPLOAD_ERR_OK) {
+        $file_tmp   = $_FILES['flower_image']['tmp_name'];
+        $original_name = $_FILES['flower_image']['name'];
+        $file_ext   = strtolower(pathinfo($original_name, PATHINFO_EXTENSION));
+        
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        
+        if (in_array($file_ext, $allowed_extensions)) {
+            // Generate unique image name
+            $new_image_name = time() . '_' . uniqid() . '.' . $file_ext;
+            $upload_directory = __DIR__ . '/../images/';
+
+            if (!file_exists($upload_directory)) {
+                mkdir($upload_directory, 0777, true);
+            }
+
+            $target_file = $upload_directory . $new_image_name;
+
+            if (move_uploaded_file($file_tmp, $target_file)) {
+                // Delete old image if it exists
+                if (!empty($flower['image']) && file_exists($upload_directory . $flower['image'])) {
+                    unlink($upload_directory . $flower['image']);
+                }
+                $image_name = $new_image_name;
+            } else {
+                $error = "Failed to upload new image!";
+            }
+        } else {
+            $error = "Invalid image format! Only JPG, JPEG, PNG, WEBP, and GIF are allowed.";
+        }
+    }
+
+    if (empty($error)) {
+        if ($flower_name === '') {
+            $error = "Flower name is required!";
+        } elseif ($price <= 0) {
+            $error = "Price must be greater than 0!";
+        } elseif ($stock_quantity < 0) {
+            $error = "Stock quantity cannot be negative!";
+        } else {
+            // Updated SQL query including image column
+            $stmt = mysqli_prepare($conn, "UPDATE flowers SET flower_name = ?, price = ?, stock_quantity = ?, supplier_id = ?, description = ?, image = ? WHERE id = ?");
+            mysqli_stmt_bind_param($stmt, "sdiissi", $flower_name, $price, $stock_quantity, $supplier_id, $description, $image_name, $id);
+
+            if (mysqli_stmt_execute($stmt)) {
+                header("Location: ../admin/flowers.php?msg=updated");
+                exit();
+            } else {
+                $error = "Error: " . mysqli_error($conn);
+            }
+        }
+    }
+}
+
 // Fetch active suppliers list
 $suppliers_result = mysqli_query($conn, "SELECT * FROM suppliers");
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-
 <link rel="stylesheet" href="../css/style.css">
-
 
 <style>
 .edit-flower-wrapper {
@@ -153,6 +190,10 @@ textarea.form-control {
     padding: 12px 15px;
 }
 
+input[type="file"].form-control {
+    padding-top: 10px;
+}
+
 .form-control:focus {
     border-color: var(--primary, #b85c70);
     box-shadow: 0 0 0 3px rgba(184, 92, 112, 0.12);
@@ -165,6 +206,18 @@ textarea.form-control {
 
 .form-row .form-group {
     flex: 1;
+}
+
+.current-img-preview {
+    margin-bottom: 10px;
+}
+
+.current-img-preview img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #e5ddd9;
 }
 
 .btn-submit {
@@ -201,10 +254,23 @@ textarea.form-control {
                 </div>
             <?php endif; ?>
 
-            <form action="" method="POST">
+            <form action="" method="POST" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="flower_name">Flower Name</label>
                     <input type="text" id="flower_name" name="flower_name" class="form-control" value="<?php echo htmlspecialchars($flower['flower_name']); ?>" required>
+                </div>
+
+                <!-- Flower Image Upload & Preview Field -->
+                <div class="form-group">
+                    <label for="flower_image">Flower Image</label>
+                    <?php if (!empty($flower['image']) && file_exists(__DIR__ . '/../images/' . $flower['image'])): ?>
+                        <div class="current-img-preview">
+                            <img src="../images/<?php echo htmlspecialchars($flower['image']); ?>" alt="Current Image">
+                            <p style="font-size: 12px; color: #666; margin-top: 4px;">Current Image</p>
+                        </div>
+                    <?php endif; ?>
+                    <input type="file" id="flower_image" name="flower_image" class="form-control" accept="image/*">
+                    <small style="color: #777; font-size: 12px;">Leave empty if you don't want to change the image.</small>
                 </div>
 
                 <div class="form-row">

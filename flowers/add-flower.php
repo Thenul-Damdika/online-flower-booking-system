@@ -20,23 +20,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price          = isset($_POST['price']) ? (float)$_POST['price'] : 0;
     $stock_quantity = isset($_POST['stock_quantity']) ? (int)$_POST['stock_quantity'] : 0;
 
-    if (empty($category_id)) {
-        $error = "Please select a flower category!";
-    } elseif ($flower_name === '') {
-        $error = "Flower name is required!";
-    } elseif ($price <= 0) {
-        $error = "Price must be greater than 0!";
-    } elseif ($stock_quantity < 0) {
-        $error = "Stock quantity cannot be negative!";
-    } else {
-        $stmt = mysqli_prepare($conn, "INSERT INTO flowers (category_id, supplier_id, flower_name, description, price, stock_quantity) VALUES (?, ?, ?, ?, ?, ?)");
-        mysqli_stmt_bind_param($stmt, "iissdi", $category_id, $supplier_id, $flower_name, $description, $price, $stock_quantity);
+    // Image Upload Handling
+    $image_name = '';
+    if (isset($_FILES['flower_image']) && $_FILES['flower_image']['error'] === UPLOAD_ERR_OK) {
+        $file_tmp   = $_FILES['flower_image']['tmp_name'];
+        $original_name = $_FILES['flower_image']['name'];
+        $file_ext   = strtolower(pathinfo($original_name, PATHINFO_EXTENSION));
+        
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        
+        if (in_array($file_ext, $allowed_extensions)) {
+            // Generate a unique image name
+            $image_name = time() . '_' . uniqid() . '.' . $file_ext;
+            $upload_directory = __DIR__ . '/../images/';
 
-        if (mysqli_stmt_execute($stmt)) {
-            header("Location: ../admin/flowers.php?msg=added");
-            exit();
+            // Create directory if it doesn't exist
+            if (!file_exists($upload_directory)) {
+                mkdir($upload_directory, 0777, true);
+            }
+
+            $target_file = $upload_directory . $image_name;
+
+            if (!move_uploaded_file($file_tmp, $target_file)) {
+                $error = "Failed to upload image file!";
+            }
         } else {
-            $error = "Database Error: " . mysqli_error($conn);
+            $error = "Invalid image format! Only JPG, JPEG, PNG, WEBP, and GIF are allowed.";
+        }
+    } else {
+        $error = "Please upload a flower image!";
+    }
+
+    if (empty($error)) {
+        if (empty($category_id)) {
+            $error = "Please select a flower category!";
+        } elseif ($flower_name === '') {
+            $error = "Flower name is required!";
+        } elseif ($price <= 0) {
+            $error = "Price must be greater than 0!";
+        } elseif ($stock_quantity < 0) {
+            $error = "Stock quantity cannot be negative!";
+        } else {
+            // Updated Query with image column
+            $stmt = mysqli_prepare($conn, "INSERT INTO flowers (category_id, supplier_id, flower_name, description, price, stock_quantity, image) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "iissdis", $category_id, $supplier_id, $flower_name, $description, $price, $stock_quantity, $image_name);
+
+            if (mysqli_stmt_execute($stmt)) {
+                header("Location: ../admin/flowers.php?msg=added");
+                exit();
+            } else {
+                $error = "Database Error: " . mysqli_error($conn);
+            }
         }
     }
 }
@@ -138,6 +172,10 @@ textarea.form-control {
     padding: 12px 15px;
 }
 
+input[type="file"].form-control {
+    padding-top: 10px;
+}
+
 .form-control:focus {
     border-color: var(--primary, #b85c70);
     box-shadow: 0 0 0 3px rgba(184, 92, 112, 0.12);
@@ -186,10 +224,17 @@ textarea.form-control {
                 </div>
             <?php endif; ?>
 
-            <form action="" method="POST">
+            <!-- Note the added enctype for file upload -->
+            <form action="" method="POST" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="flower_name">Flower Name</label>
                     <input type="text" id="flower_name" name="flower_name" class="form-control" placeholder="e.g., Red Roses Bouquet" required>
+                </div>
+
+                <!-- Flower Image Field -->
+                <div class="form-group">
+                    <label for="flower_image">Flower Image</label>
+                    <input type="file" id="flower_image" name="flower_image" class="form-control" accept="image/*" required>
                 </div>
 
                 <div class="form-row">

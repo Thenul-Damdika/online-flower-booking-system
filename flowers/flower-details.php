@@ -38,7 +38,6 @@ $is_admin = isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] 
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-
 <link rel="stylesheet" href="../css/style.css">
 
 <style>
@@ -76,13 +75,53 @@ require_once __DIR__ . '/../includes/header.php';
 }
 
 .details-card {
-    max-width: 750px;
+    max-width: 850px;
     margin: 0 auto;
     background: var(--white, #ffffff);
     border: 1px solid var(--border, #e5ddd9);
     border-radius: var(--radius-medium, 12px);
     box-shadow: var(--shadow-small, 0 4px 15px rgba(0,0,0,0.05));
     overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 25px;
+    gap: 25px;
+    align-items: center;
+}
+
+.flower-image-container {
+    flex: 1;
+    min-width: 280px;
+    text-align: center;
+}
+
+.flower-image-container img {
+    width: 100%;
+    max-width: 320px;
+    height: 320px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid var(--border, #e5ddd9);
+}
+
+.no-image-placeholder {
+    width: 100%;
+    max-width: 320px;
+    height: 320px;
+    background: #f9f9f9;
+    border-radius: 10px;
+    border: 1px dashed #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    margin: 0 auto;
+    font-size: 14px;
+}
+
+.flower-table-container {
+    flex: 1.2;
+    min-width: 300px;
 }
 
 .styled-table {
@@ -93,17 +132,17 @@ require_once __DIR__ . '/../includes/header.php';
 }
 
 .styled-table th {
-    width: 30%;
+    width: 35%;
     background: var(--cream, #fffaf7);
     color: var(--text, #294535);
     font-weight: 700;
-    padding: 16px 20px;
+    padding: 14px 18px;
     border-bottom: 1px solid var(--border, #e5ddd9);
     vertical-align: top;
 }
 
 .styled-table td {
-    padding: 16px 20px;
+    padding: 14px 18px;
     border-bottom: 1px solid var(--border, #e5ddd9);
     color: var(--text, #294535);
 }
@@ -147,42 +186,58 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <div class="details-card">
-            <table class="styled-table">
-                <tr>
-                    <th>Flower ID</th>
-                    <td>#<?php echo (int)$flower['id']; ?></td>
-                </tr>
-                <tr>
-                    <th>Flower Name</th>
-                    <td><strong><?php echo htmlspecialchars($flower['flower_name']); ?></strong></td>
-                </tr>
-                <tr>
-                    <th>Category</th>
-                    <td><?php echo htmlspecialchars($flower['category_name'] ?? 'General'); ?></td>
-                </tr>
-                <tr>
-                    <th>Price (LKR)</th>
-                    <td><strong>Rs. <?php echo number_format($flower['price'], 2); ?></strong></td>
-                </tr>
-                <tr>
-                    <th>Stock Quantity</th>
-                    <td>
-                        <?php if ($flower['stock_quantity'] > 0): ?>
-                            <span class="badge-stock"><?php echo (int)$flower['stock_quantity']; ?> units available</span>
-                        <?php else: ?>
-                            <span class="badge-out-of-stock">Out of Stock</span>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-                <tr>
-                    <th>Supplier Name</th>
-                    <td><?php echo htmlspecialchars($flower['supplier_name'] ?? 'Not Assigned'); ?></td>
-                </tr>
-                <tr>
-                    <th>Description</th>
-                    <td><?php echo nl2br(htmlspecialchars($flower['description'] ?? 'No description available.')); ?></td>
-                </tr>
-            </table>
+            
+            <!-- Image Section -->
+            <div class="flower-image-container">
+                <?php if (!empty($flower['image']) && file_exists(__DIR__ . '/../images/' . $flower['image'])): ?>
+                    <img src="../images/<?php echo htmlspecialchars($flower['image']); ?>" alt="<?php echo htmlspecialchars($flower['flower_name']); ?>">
+                <?php else: ?>
+                    <div class="no-image-placeholder">
+                        <span>No Image Available</span>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Details Table Section -->
+            <div class="flower-table-container">
+                <table class="styled-table">
+                    <tr>
+                        <th>Flower ID</th>
+                        <td>#<?php echo (int)$flower['id']; ?></td>
+                    </tr>
+                    <tr>
+                        <th>Flower Name</th>
+                        <td><strong><?php echo htmlspecialchars($flower['flower_name']); ?></strong></td>
+                    </tr>
+                    <tr>
+                        <th>Category</th>
+                        <td><?php echo htmlspecialchars($flower['category_name'] ?? 'General'); ?></td>
+                    </tr>
+                    <tr>
+                        <th>Price (LKR)</th>
+                        <td><strong>Rs. <?php echo number_format($flower['price'], 2); ?></strong></td>
+                    </tr>
+                    <tr>
+                        <th>Stock Quantity</th>
+                        <td>
+                            <?php if ($flower['stock_quantity'] > 0): ?>
+                                <span class="badge-stock"><?php echo (int)$flower['stock_quantity']; ?> units available</span>
+                            <?php else: ?>
+                                <span class="badge-out-of-stock">Out of Stock</span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Supplier Name</th>
+                        <td><?php echo htmlspecialchars($flower['supplier_name'] ?? 'Not Assigned'); ?></td>
+                    </tr>
+                    <tr>
+                        <th>Description</th>
+                        <td><?php echo nl2br(htmlspecialchars($flower['description'] ?? 'No description available.')); ?></td>
+                    </tr>
+                </table>
+            </div>
+
         </div>
 
     </div>
