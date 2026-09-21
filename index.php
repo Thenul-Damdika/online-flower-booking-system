@@ -755,9 +755,7 @@ require_once "includes/header.php";
 
                 <div class="occasion-content">
 
-                    <span>
-                        🎂
-                    </span>
+                    
 
                     <h3>
                         Birthdays
@@ -785,9 +783,8 @@ require_once "includes/header.php";
 
                 <div class="occasion-content">
 
-                    <span>
-                        💍
-                    </span>
+                    
+                    
 
                     <h3>
                         Weddings
@@ -815,9 +812,7 @@ require_once "includes/header.php";
 
                 <div class="occasion-content">
 
-                    <span>
-                        ❤️
-                    </span>
+                    
 
                     <h3>
                         Love & Romance
