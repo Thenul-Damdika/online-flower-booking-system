@@ -1,5 +1,8 @@
+
 <?php
+
 session_start();
+
 require_once "../config/database.php";
 
 
@@ -36,35 +39,17 @@ if ($orderId <= 0) {
     die("Invalid order.");
 }
 
+
 $allowedMethods = [
     "Cash on Delivery",
     "Card",
     "Online Banking"
 ];
 
+
 if (!in_array($paymentMethod, $allowedMethods, true)) {
     die("Invalid payment method.");
 }
-
-
-/* =========================================================
-   CARD VARIABLES
-   ========================================================= */
-
-$cardHolderName = null;
-$cardLastFour = null;
-$cardNumber = "";
-$cardExpiry = "";
-$cardCvv = "";
-
-
-/* =========================================================
-   BANK VARIABLES
-   ========================================================= */
-
-$bankName = null;
-$bankHolderName = null;
-$bankReference = null;
 
 
 /* =========================================================
@@ -73,13 +58,20 @@ $bankReference = null;
 
 if ($paymentMethod === "Card") {
 
-    $cardHolderName = trim($_POST["card_holder_name"] ?? "");
+    $cardHolderName = trim(
+        $_POST["card_holder_name"] ?? ""
+    );
+
     $cardNumber = preg_replace(
         "/\D/",
         "",
         $_POST["card_number"] ?? ""
     );
-    $cardExpiry = trim($_POST["card_expiry"] ?? "");
+
+    $cardExpiry = trim(
+        $_POST["card_expiry"] ?? ""
+    );
+
     $cardCvv = preg_replace(
         "/\D/",
         "",
@@ -87,11 +79,12 @@ if ($paymentMethod === "Card") {
     );
 
 
-    /* Card holder */
+    /* Card holder name */
 
     if ($cardHolderName === "") {
         die("Card holder name is required.");
     }
+
 
     if (!preg_match(
         "/^[a-zA-Z .'-]+$/",
@@ -118,11 +111,13 @@ if ($paymentMethod === "Card") {
         die("Invalid expiry date. Use MM/YY.");
     }
 
+
     $expiryMonth = (int)$matches[1];
     $expiryYear = 2000 + (int)$matches[2];
 
     $currentMonth = (int)date("m");
     $currentYear = (int)date("Y");
+
 
     if (
         $expiryYear < $currentYear ||
@@ -137,17 +132,13 @@ if ($paymentMethod === "Card") {
 
     /* CVV */
 
-    if (!preg_match("/^[0-9]{3,4}$/", $cardCvv)) {
+    if (!preg_match(
+        "/^[0-9]{3,4}$/",
+        $cardCvv
+    )) {
         die("CVV must contain 3 or 4 digits.");
     }
 
-
-    /*
-     * Store only the last four digits.
-     * Never store the complete card number or CVV.
-     */
-
-    $cardLastFour = substr($cardNumber, -4);
 }
 
 
@@ -157,9 +148,17 @@ if ($paymentMethod === "Card") {
 
 if ($paymentMethod === "Online Banking") {
 
-    $bankName = trim($_POST["bank_name"] ?? "");
-    $bankHolderName = trim($_POST["bank_holder_name"] ?? "");
-    $bankReference = trim($_POST["bank_reference"] ?? "");
+    $bankName = trim(
+        $_POST["bank_name"] ?? ""
+    );
+
+    $bankHolderName = trim(
+        $_POST["bank_holder_name"] ?? ""
+    );
+
+    $bankReference = trim(
+        $_POST["bank_reference"] ?? ""
+    );
 
 
     $allowedBanks = [
@@ -173,7 +172,11 @@ if ($paymentMethod === "Online Banking") {
     ];
 
 
-    if (!in_array($bankName, $allowedBanks, true)) {
+    if (!in_array(
+        $bankName,
+        $allowedBanks,
+        true
+    )) {
         die("Please select a valid bank.");
     }
 
@@ -199,6 +202,7 @@ if ($paymentMethod === "Online Banking") {
     if (strlen($bankReference) > 50) {
         die("Bank reference number is too long.");
     }
+
 }
 
 
@@ -222,13 +226,16 @@ try {
          FOR UPDATE"
     );
 
+
     $orderStmt->bind_param(
         "ii",
         $orderId,
         $customerId
     );
 
+
     $orderStmt->execute();
+
 
     $order = $orderStmt
         ->get_result()
@@ -236,12 +243,14 @@ try {
 
 
     if (!$order) {
-        throw new Exception("Order not found.");
+        throw new Exception(
+            "Order not found."
+        );
     }
 
 
     /* ---------------------------------------------------------
-       ORDER STATUS
+       CHECK ORDER STATUS
        --------------------------------------------------------- */
 
     if ($order["order_status"] !== "Pending") {
@@ -264,12 +273,15 @@ try {
          FOR UPDATE"
     );
 
+
     $paymentStmt->bind_param(
         "i",
         $orderId
     );
 
+
     $paymentStmt->execute();
+
 
     $payment = $paymentStmt
         ->get_result()
@@ -287,7 +299,7 @@ try {
 
 
     /* ---------------------------------------------------------
-       TRANSACTION ID
+       PAYMENT STATUS
        --------------------------------------------------------- */
 
     $transactionId = null;
@@ -297,7 +309,8 @@ try {
 
 
     /*
-     * COD:
+     * CASH ON DELIVERY
+     *
      * Payment remains Pending.
      * Order remains Pending.
      */
@@ -308,11 +321,13 @@ try {
         $orderStatus = "Pending";
         $transactionId = null;
         $paymentDate = null;
+
     }
 
 
     /*
-     * Card / Online Banking:
+     * CARD / ONLINE BANKING
+     *
      * Payment becomes Paid.
      * Order becomes Confirmed.
      */
@@ -321,29 +336,34 @@ try {
 
         $paymentStatus = "Paid";
         $orderStatus = "Confirmed";
+
         $transactionId =
             "TXN-" .
             date("YmdHis") .
             "-" .
-            strtoupper(bin2hex(random_bytes(3)));
+            strtoupper(
+                bin2hex(random_bytes(3))
+            );
 
-        $paymentDate = date("Y-m-d H:i:s");
+        $paymentDate = date(
+            "Y-m-d H:i:s"
+        );
+
     }
 
 
     /* ---------------------------------------------------------
        UPDATE PAYMENT
+       
+       IMPORTANT:
+       Only columns that actually exist in the
+       payments table are used here.
        --------------------------------------------------------- */
 
     $updatePayment = $conn->prepare(
         "UPDATE payments
          SET amount = ?,
              payment_method = ?,
-             card_holder_name = ?,
-             card_last_four = ?,
-             bank_name = ?,
-             bank_holder_name = ?,
-             bank_reference = ?,
              payment_status = ?,
              transaction_id = ?,
              payment_date = ?
@@ -355,14 +375,9 @@ try {
 
 
     $updatePayment->bind_param(
-        "dsssssssssi",
+        "dssssi",
         $totalAmount,
         $paymentMethod,
-        $cardHolderName,
-        $cardLastFour,
-        $bankName,
-        $bankHolderName,
-        $bankReference,
         $paymentStatus,
         $transactionId,
         $paymentDate,
@@ -387,12 +402,14 @@ try {
          WHERE id = ? AND customer_id = ?"
     );
 
+
     $updateOrder->bind_param(
         "sii",
         $orderStatus,
         $orderId,
         $customerId
     );
+
 
     if (!$updateOrder->execute()) {
         throw new Exception(
@@ -422,19 +439,20 @@ try {
 
 } catch (Throwable $e) {
 
-    if ($conn->errno === 0) {
-        // Nothing required here.
-    }
-
     try {
         $conn->rollback();
     } catch (Throwable $rollbackError) {
         // Ignore rollback errors.
     }
 
+
     die(
         "Unable to process payment: " .
-        htmlspecialchars($e->getMessage())
+        htmlspecialchars(
+            $e->getMessage()
+        )
     );
 }
+
 ?>
+

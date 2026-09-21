@@ -1,18 +1,37 @@
+
 <?php
+
 session_start();
+
 require_once "../config/database.php";
+
+
+/* =========================================================
+   LOGIN CHECK
+   ========================================================= */
 
 if (!isset($_SESSION["customer_id"])) {
     header("Location: ../customer/login.php");
     exit();
 }
 
+
 $customerId = (int) $_SESSION["customer_id"];
 $orderId = (int)($_GET["order_id"] ?? 0);
+
+
+/* =========================================================
+   ORDER ID CHECK
+   ========================================================= */
 
 if ($orderId <= 0) {
     die("Invalid order.");
 }
+
+
+/* =========================================================
+   GET ORDER + PAYMENT DETAILS
+   ========================================================= */
 
 $stmt = $conn->prepare(
     "SELECT
@@ -20,8 +39,6 @@ $stmt = $conn->prepare(
         o.total_amount,
         o.order_status,
         p.payment_method,
-        p.card_holder_name,
-        p.card_last_four,
         p.payment_status,
         p.transaction_id,
         p.payment_date
@@ -33,16 +50,29 @@ $stmt = $conn->prepare(
      LIMIT 1"
 );
 
-$stmt->bind_param("ii", $orderId, $customerId);
+
+$stmt->bind_param(
+    "ii",
+    $orderId,
+    $customerId
+);
+
+
 $stmt->execute();
 
-$data = $stmt->get_result()->fetch_assoc();
+
+$data = $stmt
+    ->get_result()
+    ->fetch_assoc();
+
 
 if (!$data) {
     die("Order not found.");
 }
 
+
 require_once "../includes/header.php";
+
 ?>
 
 <style>
@@ -145,20 +175,6 @@ require_once "../includes/header.php";
         word-break: break-word;
     }
 
-    .card-info {
-        padding: 14px 18px;
-        margin: 0 0 18px;
-        background: var(--primary-light, #f8e7eb);
-        border-radius: 10px;
-        color: var(--primary-dark, #963f55);
-        font-size: 14px;
-        text-align: left;
-    }
-
-    .card-info strong {
-        color: var(--text, #292624);
-    }
-
     .success-actions {
         display: flex;
         justify-content: center;
@@ -256,82 +272,105 @@ require_once "../includes/header.php";
     }
 </style>
 
+
 <main class="payment-page">
+
     <div class="payment-container">
 
         <section class="payment-success-card">
 
-            <div class="success-icon">✓</div>
+            <div class="success-icon">
+                ✓
+            </div>
 
-            <span class="order-eyebrow">ORDER CONFIRMED</span>
 
-            <h1>Thank You!</h1>
+            <span class="order-eyebrow">
+                ORDER CONFIRMED
+            </span>
+
+
+            <h1>
+                Thank You!
+            </h1>
+
 
             <p>
                 Your flower order has been placed successfully.
             </p>
 
+
             <div class="success-details">
 
                 <div>
-                    <span>Order Number</span>
+                    <span>
+                        Order Number
+                    </span>
+
                     <strong>
                         #<?= (int)$data["id"] ?>
                     </strong>
                 </div>
 
+
                 <div>
-                    <span>Total Amount</span>
+                    <span>
+                        Total Amount
+                    </span>
+
                     <strong>
-                        Rs. <?= number_format((float)$data["total_amount"], 2) ?>
+                        Rs.
+                        <?= number_format(
+                            (float)$data["total_amount"],
+                            2
+                        ) ?>
                     </strong>
                 </div>
 
+
                 <div>
-                    <span>Payment Method</span>
+                    <span>
+                        Payment Method
+                    </span>
+
                     <strong>
-                        <?= htmlspecialchars($data["payment_method"] ?? "—") ?>
+                        <?= htmlspecialchars(
+                            $data["payment_method"] ?? "—"
+                        ) ?>
                     </strong>
                 </div>
 
+
                 <div>
-                    <span>Payment Status</span>
+                    <span>
+                        Payment Status
+                    </span>
+
                     <strong>
-                        <?= htmlspecialchars($data["payment_status"] ?? "Pending") ?>
+                        <?= htmlspecialchars(
+                            $data["payment_status"] ?? "Pending"
+                        ) ?>
                     </strong>
                 </div>
 
             </div>
 
-            <?php if (!empty($data["card_last_four"])): ?>
-
-                <div class="card-info">
-                    Card ending in
-                    <strong>
-                        **** <?= htmlspecialchars($data["card_last_four"]) ?>
-                    </strong>
-
-                    <?php if (!empty($data["card_holder_name"])): ?>
-                        <br>
-                        Card Holder:
-                        <strong>
-                            <?= htmlspecialchars($data["card_holder_name"]) ?>
-                        </strong>
-                    <?php endif; ?>
-                </div>
-
-            <?php endif; ?>
 
             <?php if (!empty($data["transaction_id"])): ?>
 
                 <p class="transaction-text">
+
                     Transaction ID:
+
                     <strong>
-                        <?= htmlspecialchars($data["transaction_id"]) ?>
+                        <?= htmlspecialchars(
+                            $data["transaction_id"]
+                        ) ?>
                     </strong>
+
                 </p>
 
             <?php endif; ?>
+
 
             <div class="success-actions">
 
@@ -341,6 +380,7 @@ require_once "../includes/header.php";
                 >
                     View Order
                 </a>
+
 
                 <a
                     href="../index.php"
@@ -354,6 +394,9 @@ require_once "../includes/header.php";
         </section>
 
     </div>
+
 </main>
 
+
 <?php require_once "../includes/footer.php"; ?>
+

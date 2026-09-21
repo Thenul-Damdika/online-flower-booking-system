@@ -284,6 +284,7 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
     </div>
+
 </main>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

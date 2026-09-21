@@ -75,7 +75,7 @@ require_once "includes/header.php";
         <div class="hero-content">
 
             <span class="hero-small-text">
-                ✿ FRESH FLOWERS • BEAUTIFUL MOMENTS
+                ✿ FRESH FLOWERS BEAUTIFUL MOMENTS
             </span>
 
             <h1>
@@ -439,49 +439,6 @@ require_once "includes/header.php";
 
                             <div class="flower-card-bottom">
 
-                                <div class="flower-price">
-
-                                    <span>
-                                        Rs.
-                                    </span>
-
-                                    <?php
-                                    echo number_format(
-                                        $flower["price"],
-                                        2
-                                    );
-                                    ?>
-
-                                </div>
-
-
-                                <form
-                                    action="cart/add-to-cart.php"
-                                    method="POST"
-                                >
-
-                                    <input
-                                        type="hidden"
-                                        name="flower_id"
-                                        value="<?php echo $flower["id"]; ?>"
-                                    >
-
-                                    <input
-                                        type="hidden"
-                                        name="quantity"
-                                        value="1"
-                                    >
-
-                                    <button
-                                        type="submit"
-                                        class="add-cart-btn"
-                                        title="Add to Cart"
-                                    >
-                                        +
-                                    </button>
-
-                                </form>
-
                             </div>
 
                         </div>
@@ -725,116 +682,115 @@ require_once "includes/header.php";
      OCCASION SECTION
 ===================================================== -->
 
-<section class="occasion-section">
 
-    <div class="container">
-
-        <div class="occasion-heading">
-
-            <span class="section-label">
-                FOR EVERY OCCASION
-            </span>
-
-            <h2>
-                There's always a reason
-                to send flowers.
-            </h2>
-
-        </div>
-
-
-        <div class="occasion-grid">
-
-
-            <a
-                href="products.php"
+<section class="occasion-section"> 
+ 
+    <div class="container"> 
+ 
+        <div class="occasion-heading"> 
+ 
+            <span class="section-label"> 
+                FOR EVERY OCCASION 
+            </span> 
+ 
+            <h2> 
+                There's always a reason 
+                to send flowers. 
+            </h2> 
+ 
+        </div> 
+ 
+ 
+        <div class="occasion-grid"> 
+ 
+ 
+            <a 
+                href="products.php" 
                 class="occasion-card birthday"
-            >
-
-                <div class="occasion-overlay"></div>
-
-                <div class="occasion-content">
-
-                    
-
-                    <h3>
-                        Birthdays
-                    </h3>
-
-                    <p>
-                        Celebrate their special day.
-                    </p>
-
-                    <strong>
-                        Shop Birthday Flowers →
-                    </strong>
-
-                </div>
-
-            </a>
-
-
-            <a
-                href="products.php"
+                style="background-image: url('images/birthday.jpg');"
+            > 
+ 
+                <div class="occasion-overlay"></div> 
+ 
+                <div class="occasion-content"> 
+ 
+                    <h3> 
+                        Birthdays 
+                    </h3> 
+ 
+                    <p> 
+                        Celebrate their special day. 
+                    </p> 
+ 
+                    <strong> 
+                        Shop Birthday Flowers → 
+                    </strong> 
+ 
+                </div> 
+ 
+            </a> 
+ 
+ 
+            <a 
+                href="products.php" 
                 class="occasion-card wedding"
-            >
-
-                <div class="occasion-overlay"></div>
-
-                <div class="occasion-content">
-
-                    
-                    
-
-                    <h3>
-                        Weddings
-                    </h3>
-
-                    <p>
-                        Make their beautiful day unforgettable.
-                    </p>
-
-                    <strong>
-                        Explore Wedding Flowers →
-                    </strong>
-
-                </div>
-
-            </a>
-
-
-            <a
-                href="products.php"
+                style="background-image: url('images/wedding.jpg');"
+            > 
+ 
+                <div class="occasion-overlay"></div> 
+ 
+                <div class="occasion-content"> 
+ 
+                    <h3> 
+                        Weddings 
+                    </h3> 
+ 
+                    <p> 
+                        Make their beautiful day unforgettable. 
+                    </p> 
+ 
+                    <strong> 
+                        Explore Wedding Flowers → 
+                    </strong> 
+ 
+                </div> 
+ 
+            </a> 
+ 
+ 
+            <a 
+                href="products.php" 
                 class="occasion-card love"
-            >
-
-                <div class="occasion-overlay"></div>
-
-                <div class="occasion-content">
-
-                    
-
-                    <h3>
-                        Love & Romance
-                    </h3>
-
-                    <p>
-                        Say what your heart feels.
-                    </p>
-
-                    <strong>
-                        Send Some Love →
-                    </strong>
-
-                </div>
-
-            </a>
-
-        </div>
-
-    </div>
-
+                style="background-image: url('images/love.jpg');"
+            > 
+ 
+                <div class="occasion-overlay"></div> 
+ 
+                <div class="occasion-content"> 
+ 
+                    <h3> 
+                        Love & Romance 
+                    </h3> 
+ 
+                    <p> 
+                        Say what your heart feels. 
+                    </p> 
+ 
+                    <strong> 
+                        Send Some Love → 
+                    </strong> 
+ 
+                </div> 
+ 
+            </a> 
+ 
+        </div> 
+ 
+    </div> 
+ 
 </section>
+
+
 
 
 <!-- =====================================================
