@@ -86,6 +86,7 @@ require_once "../includes/header.php";
     display: flex;
     align-items: center;
     justify-content: center;
+    
 }
 
 /* Main Container */
