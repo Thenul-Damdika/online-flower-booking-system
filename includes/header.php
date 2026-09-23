@@ -42,7 +42,7 @@ $adminName = $_SESSION["admin_name"] ?? "Admin";
 <!-- Main Website CSS -->
 <link
     rel="stylesheet"
-    href="/online-flower-booking-system/css/style.css"
+    href="/online-flower-booking-system/css/styles.css"
 >
 
 
